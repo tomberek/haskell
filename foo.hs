@@ -9,7 +9,7 @@ import Control.Applicative
 import Codec.Text.IConv
 import qualified Data.ByteString.Lazy.Char8 as BC
 import Data.Word
-
+import Control.Applicative
 
 -- Questions:
 -- Is it not "nice" to create this as a SEGY monad?
@@ -19,16 +19,12 @@ import Data.Word
 --   blah blah, return as a list of strings?
 --
 -- I have added FIXME in the code where I have specific issues.
---
 
 -- Requirements:
 -- print text header
 -- print binary header values
 -- print trace numbers f
 -- print trace sample values by trace number
---
-
-
 
 -- Values from 400 Byte binary header
 data BinaryHeader = BinaryHeader { numTraces :: Int -- Bytes 3213 - 3214
@@ -40,11 +36,10 @@ data BinaryHeader = BinaryHeader { numTraces :: Int -- Bytes 3213 - 3214
 
 -- Values from 240 Byte trace header
 data TraceHeader = TraceHeader { traceNum :: Int -- Bytes 1 - 4
-                 , traceNumSegy :: Int -- Byte 5 - 8
+                           , traceNumSegy :: Int -- Byte 5 - 8
 } deriving(Show)
 
 data Output = Output [BL.ByteString] BinaryHeader [TraceHeader]
-
 
 getTextHeaderLine,getTextFileHeader :: Get BL.ByteString
 getTextHeaderLine = getLazyByteString 80
@@ -70,10 +65,14 @@ getBinHeader = do
     sampleFormat <- getWord16be
     rest <- getLazyByteString (400 - 26)
 
+getBinHeader2 = do
+
 -- FIXME:
 -- I am converting from Word16 to a number in a very primitive way here,
 -- should be a better way?
-    return $ BinaryHeader (fromIntegral numTraces) (fromIntegral numAuxTraces) (fromIntegral sampleInterval / 1000) (fromIntegral numSamples) (fromIntegral sampleFormat)
+    return $ BinaryHeader (fromIntegral numTraces) (fromIntegral numAuxTraces) 
+                          (fromIntegral sampleInterval / 1000) (fromIntegral numSamples) 
+                          (fromIntegral sampleFormat)
 
 getTraceHeader :: Get TraceHeader
 getTraceHeader = do
